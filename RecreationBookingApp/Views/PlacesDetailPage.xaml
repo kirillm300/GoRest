@@ -73,7 +73,7 @@
 
             <!-- Вывод цены -->
             <Label Text="Стоимость:" FontAttributes="Bold" FontSize="16"/>
-            <Label Text="{Binding TotalPrice, StringFormat='{0:C}'}" FontSize="14" />
+            <Label Text="{Binding TotalPrice, StringFormat='{0:F2}'}" FontSize="14" />
 
             <Button Text="Забронировать" Command="{Binding BookPlaceCommand}" Margin="0,20,0,0" />
             <Label Text="{Binding ErrorMessage}" TextColor="Red" IsVisible="{Binding ErrorMessage, Converter={StaticResource StringNotNullOrEmptyConverter}}" />

@@ -59,7 +59,6 @@ public partial class PlaceDetailPage : ContentPage
     public ObservableCollection<Room> Rooms { get; } = new ObservableCollection<Room>();
     public ObservableCollection<string> Images { get; } = new ObservableCollection<string>();
     public ObservableCollection<string> RoomFeatures { get; } = new ObservableCollection<string>();
-    public ObservableCollection<string> PricingRules { get; } = new ObservableCollection<string>();
     public decimal TotalPrice
     {
         get => _totalPrice;
@@ -276,7 +275,6 @@ public partial class PlaceDetailPage : ContentPage
 
                 using (var reader = await pricingCommand.ExecuteReaderAsync())
                 {
-                    PricingRules.Clear();
                     while (await reader.ReadAsync())
                     {
                         var pricingRule = new PricingRule
@@ -288,7 +286,6 @@ public partial class PlaceDetailPage : ContentPage
                             StartDate = reader.IsDBNull(4) ? (DateTime?)null : reader.GetDateTime(4),
                             EndDate = reader.IsDBNull(5) ? (DateTime?)null : reader.GetDateTime(5)
                         };
-                        // Здесь мы не добавляем в PricingRules напрямую, а связываем с комнатами позже
                         var room = Rooms.FirstOrDefault(r => r.RoomId == pricingRule.RoomId);
                         if (room != null)
                         {
@@ -333,10 +330,35 @@ public partial class PlaceDetailPage : ContentPage
 
         decimal total = 0;
         var currentDate = StartDate;
+        var startDateTime = StartDate.Date + StartTime;
+        var endDateTime = EndDate.Date + EndTime;
+        var totalDuration = (endDateTime - startDateTime).TotalHours;
+
         for (int i = 0; i < days; i++)
         {
             var price = GetPriceForDate(currentDate);
-            total += price * (decimal)(EndTime - StartTime).TotalHours / 24;
+            decimal hoursInDay;
+
+            if (days == 1)
+            {
+                hoursInDay = (decimal)totalDuration;
+            }
+            else if (i == 0) // Первый день
+            {
+                var endOfDay = StartDate.Date.AddDays(1);
+                hoursInDay = (decimal)(endOfDay - startDateTime).TotalHours;
+            }
+            else if (i == days - 1) // Последний день
+            {
+                var startOfDay = EndDate.Date;
+                hoursInDay = (decimal)(endDateTime - startOfDay).TotalHours;
+            }
+            else // Полный день
+            {
+                hoursInDay = 24;
+            }
+
+            total += price * hoursInDay / 24;
             currentDate = currentDate.AddDays(1);
         }
 
