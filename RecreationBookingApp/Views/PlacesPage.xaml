@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RecreationBookingApp.Views.PlacesPage"
+             Title="Места">
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="10">
+        <!-- Фильтр по статусу -->
+        <HorizontalStackLayout Grid.Row="0" Spacing="10">
+            <Label Text="Фильтр по статусу:" VerticalOptions="Center" />
+            <Picker ItemsSource="{Binding StatusFilters}"
+                    SelectedItem="{Binding SelectedStatusFilter}"
+                    HorizontalOptions="FillAndExpand" />
+        </HorizontalStackLayout>
+
+        <!-- Фильтр по категории -->
+        <HorizontalStackLayout Grid.Row="1" Spacing="10">
+            <Label Text="Фильтр по категории:" VerticalOptions="Center" />
+            <Picker ItemsSource="{Binding CategoryFilters}"
+                    SelectedItem="{Binding SelectedCategoryFilter}"
+                    HorizontalOptions="FillAndExpand" />
+        </HorizontalStackLayout>
+
+        <!-- Кнопка обновления -->
+        <Button Grid.Row="2" 
+                Text="Обновить" 
+                Command="{Binding RefreshPlacesCommand}" 
+                Margin="0,10,0,10" />
+
+        <!-- Список мест -->
+        <CollectionView Grid.Row="3" 
+                        ItemsSource="{Binding Places}" 
+                        SelectedItem="{Binding SelectedPlace}"
+                        SelectionMode="Single"
+                        SelectionChangedCommand="{Binding PlaceSelectedCommand}"
+                        IsVisible="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}"
+                        EmptyView="Нет доступных мест">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Padding="10" Margin="5">
+                        <StackLayout>
+                            <Label Text="{Binding Name}" FontAttributes="Bold" />
+                            <Label Text="{Binding Description}" />
+                            <Label Text="{Binding Address}" />
+                            <Label Text="{Binding Status}" />
+                            <Label Text="{Binding Category?.Name}" />
+                        </StackLayout>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Индикатор загрузки -->
+        <ActivityIndicator Grid.Row="3" 
+                           IsRunning="{Binding IsBusy}" 
+                           IsVisible="{Binding IsBusy}" 
+                           VerticalOptions="Center" 
+                           HorizontalOptions="Center" />
+
+        <!-- Сообщение об ошибке -->
+        <Label Grid.Row="3" 
+               Text="{Binding ErrorMessage}" 
+               TextColor="Red" 
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource StringNotNullOrEmptyConverter}}" />
+    </Grid>
+</ContentPage>

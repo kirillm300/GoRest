@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="RecreationBookingApp.Views.LoginPage"
+    Title="Авторизация">
+
+    <VerticalStackLayout Padding="20" Spacing="10">
+        <Label Text="Добро пожаловать!" FontSize="24" HorizontalOptions="Center" />
+
+        <Entry
+            Placeholder="Email"
+            Keyboard="Email"
+            Text="{Binding Email}" />
+
+        <Entry
+            Placeholder="Пароль"
+            IsPassword="True"
+            Text="{Binding Password}" />
+
+        <Entry
+            Placeholder="Полное имя"
+            Text="{Binding FullName}"
+            IsVisible="{Binding IsRegisterMode}" />
+
+        <Entry
+            Placeholder="Телефон"
+            Keyboard="Telephone"
+            Text="{Binding Phone}"
+            IsVisible="{Binding IsRegisterMode}" />
+
+        <Label Text="{Binding ErrorMessage}" TextColor="Red" IsVisible="{Binding ErrorMessage, Converter={StaticResource NotEmptyStringConverter}}" />
+
+        <ActivityIndicator IsRunning="{Binding IsBusy}" Color="Gray" />
+
+        <Button
+            Text="{Binding ToggleModeText}"
+            Command="{Binding ToggleModeCommand}"
+            HorizontalOptions="Center" />
+
+        <Button
+            Text="Войти"
+            Command="{Binding LoginCommand}"
+            IsVisible="{Binding !IsRegisterMode}" />
+
+        <Button
+            Text="Зарегистрироваться"
+            Command="{Binding RegisterCommand}"
+            IsVisible="{Binding IsRegisterMode}" />
+    </VerticalStackLayout>
+</ContentPage>

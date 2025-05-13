@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RecreationBookingApp.Views.PlaceDetailPage"
+             Title="Детали места">
+    <ScrollView>
+        <StackLayout Padding="10" Spacing="10">
+            <Label Text="{Binding Place.Name}" FontSize="Large" FontAttributes="Bold" />
+            <Label Text="{Binding Place.Description}" />
+            <Label Text="{Binding Place.Address}" />
+            <Label Text="{Binding Place.ContactPhone}" />
+            <!--<Label Text="{Binding Place.Status}" />-->
+            <!--<Label Text="{Binding Place.CreatedAt, StringFormat='{0:dd/MM/yyyy HH:mm}'}" />-->
+
+            <!-- Изображения -->
+            <Label Text="Изображения:" FontAttributes="Bold" />
+            <CollectionView ItemsSource="{Binding Images}" EmptyView="Нет изображений">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Label Text="{Binding .}" Margin="10,0,0,0" />
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Комнаты -->
+            <Label Text="Комнаты:" FontAttributes="Bold" />
+            <CollectionView ItemsSource="{Binding Rooms}" EmptyView="Нет комнат">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <StackLayout>
+                            <Label Text="{Binding Name}" Margin="10,0,0,0" />
+                            <HorizontalStackLayout>
+                                <Label Text="Вместимость: " Margin="10,0,0,0"/>
+                                <Label Text="{Binding Capacity}" Margin="0,0,0,0" />
+                            </HorizontalStackLayout>
+                        </StackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Особенности комнат -->
+            <Label Text="Особенности комнат:" FontAttributes="Bold" />
+            <CollectionView ItemsSource="{Binding RoomFeatures}" EmptyView="Нет особенностей">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Label Text="{Binding .}" Margin="10,0,0,0" />
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Выбор комнаты -->
+            <Label Text="Выберите комнату для бронирования:" FontAttributes="Bold" />
+            <Picker x:Name="RoomPicker" ItemsSource="{Binding Rooms}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding SelectedRoom, Mode=TwoWay}" />
+
+            <!-- Выбор диапазона дат и времени -->
+            <Label Text="Выберите даты и время:" FontAttributes="Bold" />
+            <StackLayout Orientation="Horizontal" Spacing="10">
+                <Label Text="С:" />
+                <DatePicker Date="{Binding StartDate, Mode=TwoWay}" />
+            </StackLayout>
+            <StackLayout Orientation="Horizontal" Spacing="10">
+                <Label Text="По:" />
+                <DatePicker Date="{Binding EndDate, Mode=TwoWay}" />
+            </StackLayout>
+            <StackLayout Orientation="Horizontal" Spacing="10">
+                <Label Text="Время начала:" />
+                <TimePicker Time="{Binding StartTime, Mode=TwoWay}" />
+            </StackLayout>
+            <StackLayout Orientation="Horizontal" Spacing="10">
+                <Label Text="Время окончания:" />
+                <TimePicker Time="{Binding EndTime, Mode=TwoWay}" />
+            </StackLayout>
+
+            <!-- Вывод цены -->
+            <Label Text="Стоимость:" FontAttributes="Bold" FontSize="16"/>
+            <CollectionView ItemsSource="{Binding Rooms}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <StackLayout>
+                            <HorizontalStackLayout>
+                                <Label Text="Итого: " Margin="10, 0, 0, 0"/>
+                                <Label Text="{Binding BasePrice}" />
+                            </HorizontalStackLayout>
+                        </StackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Button Text="Забронировать" Command="{Binding BookPlaceCommand}" Margin="0,20,0,0" />
+            <Label Text="{Binding ErrorMessage}" TextColor="Red" IsVisible="{Binding ErrorMessage, Converter={StaticResource StringNotNullOrEmptyConverter}}" />
+        </StackLayout>
+    </ScrollView>
+</ContentPage>

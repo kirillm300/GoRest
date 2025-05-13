@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="RecreationBookingApp.Views.MainPage"
+    Title="Главная">
+
+    <ContentPage.Content>
+        <VerticalStackLayout
+            Padding="30"
+            Spacing="20">
+            <Label
+                Text="Добро пожаловать на главную страницу!"
+                FontSize="24"
+                HorizontalOptions="Center" />
+            <Button
+                Text="Посмотреть места отдыха"
+                Command="{Binding NavigateToPlacesCommand}"
+                HorizontalOptions="Center" />
+        </VerticalStackLayout>
+    </ContentPage.Content>
+</ContentPage>
