@@ -23,6 +23,7 @@ public partial class PlaceDetailPage : ContentPage
     private TimeSpan _startTime;
     private TimeSpan _endTime;
     private Room _selectedRoom;
+    private decimal _totalPrice;
 
     public string PlaceId
     {
@@ -58,6 +59,16 @@ public partial class PlaceDetailPage : ContentPage
     public ObservableCollection<Room> Rooms { get; } = new ObservableCollection<Room>();
     public ObservableCollection<string> Images { get; } = new ObservableCollection<string>();
     public ObservableCollection<string> RoomFeatures { get; } = new ObservableCollection<string>();
+    public ObservableCollection<string> PricingRules { get; } = new ObservableCollection<string>();
+    public decimal TotalPrice
+    {
+        get => _totalPrice;
+        set
+        {
+            _totalPrice = value;
+            OnPropertyChanged();
+        }
+    }
 
     public Room SelectedRoom
     {
@@ -66,6 +77,7 @@ public partial class PlaceDetailPage : ContentPage
         {
             _selectedRoom = value;
             OnPropertyChanged();
+            UpdateTotalPrice(); // Обновляем цену при смене комнаты
         }
     }
 
@@ -76,6 +88,7 @@ public partial class PlaceDetailPage : ContentPage
         {
             _startDate = value;
             OnPropertyChanged();
+            UpdateTotalPrice(); // Обновляем цену при смене даты
         }
     }
 
@@ -86,6 +99,7 @@ public partial class PlaceDetailPage : ContentPage
         {
             _endDate = value;
             OnPropertyChanged();
+            UpdateTotalPrice(); // Обновляем цену при смене даты
         }
     }
 
@@ -96,6 +110,7 @@ public partial class PlaceDetailPage : ContentPage
         {
             _startTime = value;
             OnPropertyChanged();
+            UpdateTotalPrice(); // Обновляем цену при смене времени
         }
     }
 
@@ -106,6 +121,7 @@ public partial class PlaceDetailPage : ContentPage
         {
             _endTime = value;
             OnPropertyChanged();
+            UpdateTotalPrice(); // Обновляем цену при смене времени
         }
     }
 
@@ -245,13 +261,108 @@ public partial class PlaceDetailPage : ContentPage
                     }
                     Debug.WriteLine($"PlaceDetailPage: Loaded {RoomFeatures.Count} room features for placeId={PlaceId}");
                 }
+
+                // Загрузка правил ценообразования
+                var pricingCommand = connection.CreateCommand();
+                pricingCommand.CommandText = @"
+                    SELECT pr.rule_id, pr.room_id, pr.type, pr.price, pr.start_date, pr.end_date
+                    FROM pricing_rules pr
+                    WHERE pr.room_id IN (
+                        SELECT r.room_id 
+                        FROM rooms r 
+                        WHERE r.place_id = $placeId
+                    )";
+                pricingCommand.Parameters.AddWithValue("$placeId", PlaceId);
+
+                using (var reader = await pricingCommand.ExecuteReaderAsync())
+                {
+                    PricingRules.Clear();
+                    while (await reader.ReadAsync())
+                    {
+                        var pricingRule = new PricingRule
+                        {
+                            PricingRuleId = reader.GetString(0),
+                            RoomId = reader.GetString(1),
+                            Type = reader.GetString(2),
+                            Price = reader.GetDecimal(3),
+                            StartDate = reader.IsDBNull(4) ? (DateTime?)null : reader.GetDateTime(4),
+                            EndDate = reader.IsDBNull(5) ? (DateTime?)null : reader.GetDateTime(5)
+                        };
+                        // Здесь мы не добавляем в PricingRules напрямую, а связываем с комнатами позже
+                        var room = Rooms.FirstOrDefault(r => r.RoomId == pricingRule.RoomId);
+                        if (room != null)
+                        {
+                            if (room.PricingRules == null) room.PricingRules = new List<PricingRule>();
+                            room.PricingRules.Add(pricingRule);
+                        }
+                    }
+                    Debug.WriteLine($"PlaceDetailPage: Loaded pricing rules for placeId={PlaceId}");
+                }
             }
+            UpdateTotalPrice();
         }
         catch (Exception ex)
         {
             ErrorMessage = $"Ошибка загрузки данных: {ex.Message}";
             Debug.WriteLine($"PlaceDetailPage: Error loading place details: {ex.Message}");
         }
+    }
+
+    private bool IsWeekend(DateTime date)
+    {
+        return date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday;
+    }
+
+    private void UpdateTotalPrice()
+    {
+        if (SelectedRoom == null || StartDate > EndDate)
+        {
+            TotalPrice = 0;
+            return;
+        }
+
+        TotalPrice = CalculateTotalPrice();
+    }
+
+    private decimal CalculateTotalPrice()
+    {
+        if (SelectedRoom == null || SelectedRoom.PricingRules == null) return 0;
+
+        var days = (EndDate - StartDate).Days + 1;
+        if (days <= 0) return 0;
+
+        decimal total = 0;
+        var currentDate = StartDate;
+        for (int i = 0; i < days; i++)
+        {
+            var price = GetPriceForDate(currentDate);
+            total += price * (decimal)(EndTime - StartTime).TotalHours / 24;
+            currentDate = currentDate.AddDays(1);
+        }
+
+        return Math.Round(total, 2);
+    }
+
+    private decimal GetPriceForDate(DateTime date)
+    {
+        if (SelectedRoom?.PricingRules == null) return 0;
+
+        bool isWeekend = IsWeekend(date);
+        var applicableRules = SelectedRoom.PricingRules
+            .Where(r => (r.StartDate == null || date >= r.StartDate) && (r.EndDate == null || date <= r.EndDate))
+            .ToList();
+
+        PricingRule rule = null;
+        if (isWeekend && applicableRules.Any(r => r.Type == "holiday"))
+        {
+            rule = applicableRules.First(r => r.Type == "holiday");
+        }
+        else if (applicableRules.Any(r => r.Type == "base"))
+        {
+            rule = applicableRules.First(r => r.Type == "base");
+        }
+
+        return rule?.Price ?? SelectedRoom.BasePrice;
     }
 
     private async Task BookPlaceAsync()
@@ -387,7 +498,7 @@ public partial class PlaceDetailPage : ContentPage
                                 ScheduleId = newScheduleId,
                                 PromocodeId = null,
                                 Status = "pending",
-                                TotalPrice = CalculateTotalPrice(currentDate),
+                                TotalPrice = CalculateTotalPrice(),
                                 PeopleCount = 1,
                                 PaymentStatus = "unpaid",
                                 CreatedAt = createdAt
@@ -491,12 +602,5 @@ public partial class PlaceDetailPage : ContentPage
             Debug.WriteLine($"PlaceDetailPage: Error checking availability: {ex.Message}");
             return (null, false);
         }
-    }
-
-    private decimal CalculateTotalPrice(DateTime date)
-    {
-        var durationHours = (EndTime - StartTime).TotalHours;
-        var dailyPrice = SelectedRoom.BasePrice * (decimal)durationHours / 24;
-        return dailyPrice;
     }
 }

@@ -33,4 +33,6 @@ public class Room
     public DateTime CreatedAt { get; set; }
 
     public List<RoomFeature> Features { get; set; } = new List<RoomFeature>(); // Коллекция особенностей
+
+    public List<PricingRule> PricingRules { get; set; } // Добавляем коллекцию правил
 }
