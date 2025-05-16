@@ -52,6 +52,7 @@ public static class MauiProgram
         builder.Services.AddTransient<PlacesPage>();
         builder.Services.AddTransient<PlaceDetailViewModel>();
         builder.Services.AddTransient<PlaceDetailPage>();
+        builder.Services.AddTransient<ReviewPage>();
 
         builder.Services.AddSingleton<App>();
 
