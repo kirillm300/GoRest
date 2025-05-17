@@ -19,7 +19,7 @@ public class UserService : IUserService
             return null;
 
         var user = await _userRepository.GetAsync(u => u.Email == email);
-        if (user == null || user.PasswordHash != password) // Прямое сравнение, если хеширование не используется
+        if (user == null || user.PasswordHash != password)
             return null;
 
         return user;

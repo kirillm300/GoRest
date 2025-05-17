@@ -20,12 +20,6 @@
                     HorizontalOptions="FillAndExpand" />
         </HorizontalStackLayout>
 
-        <!-- Кнопка обновления -->
-        <Button Grid.Row="2" 
-                Text="Обновить" 
-                Command="{Binding RefreshPlacesCommand}" 
-                Margin="0,10,0,10" />
-
         <!-- Список мест -->
         <CollectionView Grid.Row="3" 
                         ItemsSource="{Binding Places}" 

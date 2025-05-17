@@ -23,7 +23,7 @@ public class Booking
 
     [ForeignKey(nameof(Place))]
     [Column("place_id")]
-    public string PlaceId { get; set; } // Новое поле для связи с Place
+    public string PlaceId { get; set; }
     public Place Place { get; set; }
 
     [ForeignKey(nameof(Promocode))]
