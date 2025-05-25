@@ -1,36 +1,21 @@
 ﻿using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Maui.Controls;
 using RecreationBookingApp.Data;
 using RecreationBookingApp.Models;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.Input;
-using Microsoft.EntityFrameworkCore;
 
 namespace RecreationBookingApp.Views;
 
-public class BookedPlaceViewModel : BindableObject
+public class ReviewViewModel : BindableObject
 {
-    private string _placeId;
     private string _name;
-    private string _address;
-    private bool _hasReview;
     private int _rating;
     private string _comment;
-
-    public string PlaceId
-    {
-        get => _placeId;
-        set
-        {
-            _placeId = value;
-            OnPropertyChanged();
-        }
-    }
+    private DateTime _createdAt;
 
     public string Name
     {
@@ -38,26 +23,6 @@ public class BookedPlaceViewModel : BindableObject
         set
         {
             _name = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public string Address
-    {
-        get => _address;
-        set
-        {
-            _address = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public bool HasReview
-    {
-        get => _hasReview;
-        set
-        {
-            _hasReview = value;
             OnPropertyChanged();
         }
     }
@@ -81,6 +46,16 @@ public class BookedPlaceViewModel : BindableObject
             OnPropertyChanged();
         }
     }
+
+    public DateTime CreatedAt
+    {
+        get => _createdAt;
+        set
+        {
+            _createdAt = value;
+            OnPropertyChanged();
+        }
+    }
 }
 
 public partial class ReviewPage : ContentPage
@@ -88,9 +63,7 @@ public partial class ReviewPage : ContentPage
     private readonly AppDbContext _dbContext;
     private string _errorMessage;
 
-    public ObservableCollection<BookedPlaceViewModel> BookedPlaces { get; } = new ObservableCollection<BookedPlaceViewModel>();
-    public List<int> RatingOptions { get; } = new List<int> { 1, 2, 3, 4, 5 };
-    public IRelayCommand<BookedPlaceViewModel> SubmitReviewCommand { get; }
+    public ObservableCollection<ReviewViewModel> UserReviews { get; } = new ObservableCollection<ReviewViewModel>();
 
     public string ErrorMessage
     {
@@ -105,18 +78,17 @@ public partial class ReviewPage : ContentPage
     public ReviewPage(AppDbContext dbContext)
     {
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext), "AppDbContext cannot be null.");
-        SubmitReviewCommand = new RelayCommand<BookedPlaceViewModel>(async (place) => await SubmitReviewAsync(place));
         InitializeComponent();
         BindingContext = this;
-        LoadBookedPlacesAsync();
+        LoadUserReviewsAsync();
     }
 
-    private async void LoadBookedPlacesAsync()
+    private async void LoadUserReviewsAsync()
     {
         var userId = Preferences.Get("UserId", null);
         if (string.IsNullOrWhiteSpace(userId))
         {
-            ErrorMessage = "Пожалуйста, войдите в аккаунт, чтобы оставить отзыв.";
+            ErrorMessage = "Пожалуйста, войдите в аккаунт, чтобы увидеть отзывы.";
             return;
         }
 
@@ -127,149 +99,38 @@ public partial class ReviewPage : ContentPage
                 await connection.OpenAsync();
                 Debug.WriteLine("ReviewPage: Database connection opened.");
 
-                // Загружаем подтверждённые брони пользователя
-                var bookingsCommand = connection.CreateCommand();
-                bookingsCommand.CommandText = @"
-                    SELECT DISTINCT p.place_id, p.name, p.address
-                    FROM bookings b
-                    JOIN places p ON b.place_id = p.place_id
-                    WHERE b.user_id = $userId AND b.status = 'confirmed'";
-                bookingsCommand.Parameters.AddWithValue("$userId", userId);
+                // Загружаем отзывы пользователя
+                var reviewsCommand = connection.CreateCommand();
+                reviewsCommand.CommandText = @"
+                    SELECT r.comment, r.rating, r.created_at, p.name
+                    FROM reviews r
+                    JOIN places p ON r.place_id = p.place_id
+                    WHERE r.user_id = $userId";
+                reviewsCommand.Parameters.AddWithValue("$userId", userId);
 
-                var bookedPlaces = new List<BookedPlaceViewModel>();
-                using (var reader = await bookingsCommand.ExecuteReaderAsync())
+                UserReviews.Clear();
+                using (var reader = await reviewsCommand.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())
                     {
-                        var place = new BookedPlaceViewModel
+                        var review = new ReviewViewModel
                         {
-                            PlaceId = reader.GetString(0),
-                            Name = reader.GetString(1),
-                            Address = reader.GetString(2),
-                            Rating = 5 // Значение по умолчанию
+                            Comment = reader.IsDBNull(0) ? null : reader.GetString(0),
+                            Rating = reader.GetInt32(1),
+                            CreatedAt = reader.GetDateTime(2),
+                            Name = reader.GetString(3)
                         };
-                        bookedPlaces.Add(place);
+                        UserReviews.Add(review);
                     }
                 }
 
-                // Проверяем, оставил ли пользователь уже отзыв на каждое место
-                foreach (var place in bookedPlaces)
-                {
-                    var reviewCheckCommand = connection.CreateCommand();
-                    reviewCheckCommand.CommandText = @"
-                        SELECT COUNT(*) 
-                        FROM reviews 
-                        WHERE user_id = $userId AND place_id = $placeId";
-                    reviewCheckCommand.Parameters.AddWithValue("$userId", userId);
-                    reviewCheckCommand.Parameters.AddWithValue("$placeId", place.PlaceId);
-
-                    var reviewCount = Convert.ToInt32(await reviewCheckCommand.ExecuteScalarAsync());
-                    place.HasReview = reviewCount > 0;
-                }
-
-                // Обновляем коллекцию
-                BookedPlaces.Clear();
-                foreach (var place in bookedPlaces)
-                {
-                    BookedPlaces.Add(place);
-                }
-
-                Debug.WriteLine($"ReviewPage: Loaded {BookedPlaces.Count} places for userId={userId}");
+                Debug.WriteLine($"ReviewPage: Loaded {UserReviews.Count} reviews for userId={userId}");
             }
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Ошибка загрузки мест: {ex.Message}";
-            Debug.WriteLine($"ReviewPage: Error loading booked places: {ex.Message}");
-        }
-    }
-
-    private async Task SubmitReviewAsync(BookedPlaceViewModel place)
-    {
-        var userId = Preferences.Get("UserId", null);
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            ErrorMessage = "Пожалуйста, войдите в аккаунт, чтобы оставить отзыв.";
-            return;
-        }
-
-        // Валидация рейтинга
-        if (place.Rating < 1 || place.Rating > 5)
-        {
-            ErrorMessage = "Оценка должна быть от 1 до 5.";
-            return;
-        }
-
-        try
-        {
-            ErrorMessage = string.Empty;
-            var review = new Review
-            {
-                ReviewId = Guid.NewGuid().ToString(),
-                UserId = userId,
-                PlaceId = place.PlaceId,
-                Rating = place.Rating,
-                Comment = string.IsNullOrWhiteSpace(place.Comment) ? null : place.Comment,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            using (var connection = _dbContext.Database.GetDbConnection() as SqliteConnection)
-            {
-                await connection.OpenAsync();
-                using (var transaction = connection.BeginTransaction())
-                {
-                    try
-                    {
-                        // Проверяем, не оставил ли пользователь уже отзыв
-                        var reviewCheckCommand = connection.CreateCommand();
-                        reviewCheckCommand.CommandText = @"
-                            SELECT COUNT(*) 
-                            FROM reviews 
-                            WHERE user_id = $userId AND place_id = $placeId";
-                        reviewCheckCommand.Parameters.AddWithValue("$userId", userId);
-                        reviewCheckCommand.Parameters.AddWithValue("$placeId", place.PlaceId);
-
-                        var reviewCount = Convert.ToInt32(await reviewCheckCommand.ExecuteScalarAsync());
-                        if (reviewCount > 0)
-                        {
-                            ErrorMessage = "Вы уже оставили отзыв на это место.";
-                            return;
-                        }
-
-                        // Добавляем отзыв
-                        var command = connection.CreateCommand();
-                        command.Transaction = transaction;
-                        command.CommandText = @"
-                            INSERT INTO reviews (review_id, user_id, place_id, rating, comment, created_at)
-                            VALUES ($reviewId, $userId, $placeId, $rating, $comment, $createdAt)";
-                        command.Parameters.AddWithValue("$reviewId", review.ReviewId);
-                        command.Parameters.AddWithValue("$userId", review.UserId);
-                        command.Parameters.AddWithValue("$placeId", review.PlaceId);
-                        command.Parameters.AddWithValue("$rating", review.Rating);
-                        command.Parameters.AddWithValue("$comment", (object)review.Comment ?? DBNull.Value);
-                        command.Parameters.AddWithValue("$createdAt", review.CreatedAt);
-
-                        await command.ExecuteNonQueryAsync();
-                        transaction.Commit();
-
-                        // Обновляем состояние
-                        place.HasReview = true;
-                        await DisplayAlert("Успех", "Отзыв успешно отправлен!", "OK");
-                        Debug.WriteLine($"ReviewPage: Review submitted for placeId={place.PlaceId}, rating={place.Rating}");
-                    }
-                    catch (Exception ex)
-                    {
-                        transaction.Rollback();
-                        ErrorMessage = $"Ошибка при отправке отзыва: {ex.Message}";
-                        Debug.WriteLine($"ReviewPage: Error submitting review: {ex.Message}");
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Ошибка при отправке отзыва: {ex.Message}";
-            Debug.WriteLine($"ReviewPage: Error submitting review: {ex.Message}");
+            ErrorMessage = $"Ошибка загрузки отзывов: {ex.Message}";
+            Debug.WriteLine($"ReviewPage: Error loading reviews: {ex.Message}");
         }
     }
 }

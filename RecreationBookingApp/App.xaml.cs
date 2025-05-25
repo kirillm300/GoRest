@@ -33,21 +33,12 @@ public partial class App : Application
             string dbName = "gorest_db.db";
             string dbPath = Path.Combine(FileSystem.AppDataDirectory, dbName);
 
-            // Проверяем, существует ли файл базы данных
-            if (!File.Exists(dbPath))
-            {
-                Debug.WriteLine($"App: Файл базы данных {dbPath} не найден. Копируем из ресурсов...");
-
-                // Копируем базу данных из ресурсов только если файла нет
-                using var srcStream = await FileSystem.OpenAppPackageFileAsync(dbName);
-                using var destStream = File.Create(dbPath);
-                await srcStream.CopyToAsync(destStream);
-                Debug.WriteLine($"App: База данных {dbName} скопирована из ресурсов.");
-            }
-            else
-            {
-                Debug.WriteLine($"App: Файл базы данных {dbPath} уже существует. Используем существующий файл.");
-            }
+            // Копируем базу данных из ресурсов при каждом запуске
+            Debug.WriteLine($"App: Копирование базы данных {dbName} из ресурсов...");
+            using var srcStream = await FileSystem.OpenAppPackageFileAsync(dbName);
+            using var destStream = File.Create(dbPath);
+            await srcStream.CopyToAsync(destStream);
+            Debug.WriteLine($"App: База данных {dbName} скопирована из ресурсов.");
 
             await dbContext.Database.EnsureCreatedAsync();
             Debug.WriteLine("App: Подключение к базе данных успешно.");

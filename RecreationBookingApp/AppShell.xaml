@@ -19,4 +19,9 @@
         Title="Places"
         ContentTemplate="{DataTemplate views:PlacesPage}"
         Route="places" />
+
+    <ShellContent
+        Title="Review"
+        ContentTemplate="{DataTemplate views:ReviewPage}"
+        Route="review" />
 </Shell>

@@ -2,44 +2,26 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="RecreationBookingApp.Views.ReviewPage"
-             Title="Оставить отзыв">
+             Title="Мои отзывы">
     <ScrollView>
         <StackLayout Padding="10" Spacing="10">
-            <!-- Список мест -->
-            <CollectionView ItemsSource="{Binding BookedPlaces}" EmptyView="Нет мест для отзыва">
+            <!-- Список отзывов -->
+            <CollectionView ItemsSource="{Binding UserReviews}" EmptyView="Отзывов нет">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <Frame BorderColor="LightGray" CornerRadius="5" Padding="10" Margin="0,5">
                             <StackLayout Spacing="10">
                                 <!-- Название места -->
                                 <Label Text="{Binding Name}" FontSize="Medium" FontAttributes="Bold" />
-                                <Label Text="{Binding Address}" FontSize="Small" />
 
-                                <!-- Проверка: уже оставлен отзыв? -->
-                                <Label Text="Вы уже оставили отзыв на это место."
-                                       TextColor="Green"
-                                       IsVisible="{Binding HasReview}" />
+                                <!-- Оценка -->
+                                <Label Text="{Binding Rating, StringFormat='Оценка: {0}'}" FontSize="Small" />
 
-                                <!-- Форма для отзыва (показывается, если отзыва нет) -->
-                                <StackLayout IsVisible="{Binding HasReview, Converter={StaticResource InverseBooleanConverter}}">
-                                    <!-- Выбор рейтинга -->
-                                    <Label Text="Оценка (1-5):" />
-                                    <Picker ItemsSource="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=RatingOptions}"
-                                            SelectedItem="{Binding Rating, Mode=TwoWay}"
-                                            HorizontalOptions="FillAndExpand" />
+                                <!-- Комментарий -->
+                                <Label Text="{Binding Comment}" FontSize="Small" />
 
-                                    <!-- Поле для комментария -->
-                                    <Label Text="Комментарий (опционально):" />
-                                    <Editor Text="{Binding Comment, Mode=TwoWay}"
-                                            HeightRequest="100"
-                                            HorizontalOptions="FillAndExpand" />
-
-                                    <!-- Кнопка отправки отзыва -->
-                                    <Button Text="Оставить отзыв"
-                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=SubmitReviewCommand}"
-                                            CommandParameter="{Binding .}"
-                                            Margin="0,10,0,0" />
-                                </StackLayout>
+                                <!-- Дата оставления -->
+                                <Label Text="{Binding CreatedAt, StringFormat='Дата: {0:dd/MM/yyyy HH:mm}'}" FontSize="Small" />
                             </StackLayout>
                         </Frame>
                     </DataTemplate>
