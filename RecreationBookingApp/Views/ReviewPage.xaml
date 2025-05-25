@@ -5,6 +5,11 @@
              Title="Мои отзывы">
     <ScrollView>
         <StackLayout Padding="10" Spacing="10">
+            <!-- Кнопка для оставления отзыва -->
+            <Button Text="Оставить отзыв"
+                    Command="{Binding AddReviewCommand}"
+                    Margin="0,0,0,10" />
+
             <!-- Список отзывов -->
             <CollectionView ItemsSource="{Binding UserReviews}" EmptyView="Отзывов нет">
                 <CollectionView.ItemTemplate>
@@ -27,6 +32,41 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
+
+            <!-- Форма для нового отзыва (скрыта по умолчанию) -->
+            <StackLayout x:Name="ReviewForm"
+                         IsVisible="False"
+                         Spacing="10">
+                <!-- Выбор места -->
+                <Label Text="Выберите место:" />
+                <Picker x:Name="PlacePicker"
+                        ItemsSource="{Binding AvailablePlaces}"
+                        ItemDisplayBinding="{Binding Name}"
+                        SelectedItem="{Binding SelectedPlace, Mode=TwoWay}"
+                        HorizontalOptions="FillAndExpand" />
+
+                <!-- Выбор рейтинга -->
+                <Label Text="Оценка (1-5):" />
+                <Picker ItemsSource="{Binding RatingOptions}"
+                        SelectedItem="{Binding NewRating, Mode=TwoWay}"
+                        HorizontalOptions="FillAndExpand" />
+
+                <!-- Поле для комментария -->
+                <Label Text="Комментарий (опционально):" />
+                <Editor Text="{Binding NewComment, Mode=TwoWay}"
+                        HeightRequest="100"
+                        HorizontalOptions="FillAndExpand" />
+
+                <!-- Кнопки отправки и отмены -->
+                <StackLayout Orientation="Horizontal" Spacing="10">
+                    <Button Text="Отправить"
+                            Command="{Binding SubmitNewReviewCommand}"
+                            HorizontalOptions="FillAndExpand" />
+                    <Button Text="Отмена"
+                            Command="{Binding CancelReviewCommand}"
+                            HorizontalOptions="FillAndExpand" />
+                </StackLayout>
+            </StackLayout>
 
             <!-- Сообщение об ошибке -->
             <Label Text="{Binding ErrorMessage}" 
