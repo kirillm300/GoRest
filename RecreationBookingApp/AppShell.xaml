@@ -24,4 +24,9 @@
         Title="Review"
         ContentTemplate="{DataTemplate views:ReviewPage}"
         Route="review" />
+
+    <ShellContent
+        Title="Bookings"
+        ContentTemplate="{DataTemplate views:BookingsPage}"
+        Route="bookings" />
 </Shell>

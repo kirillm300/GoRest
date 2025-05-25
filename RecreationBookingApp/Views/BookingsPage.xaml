@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RecreationBookingApp.Views.BookingsPage"
+             Title="Мои брони">
+    <ScrollView>
+        <StackLayout Padding="10" Spacing="10">
+            <!-- Список броней -->
+            <CollectionView ItemsSource="{Binding Bookings}" EmptyView="Броней нет">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame BorderColor="LightGray" CornerRadius="5" Padding="10" Margin="0,5">
+                            <StackLayout Spacing="10">
+                                <!-- ID брони -->
+                                <Label Text="{Binding BookingId, StringFormat='ID: {0}'}" FontSize="Small" />
+
+                                <!-- Название места (предполагаем, что PlaceName будет добавлено в модель) -->
+                                <Label Text="{Binding PlaceName}" FontSize="Medium" FontAttributes="Bold" />
+
+                                <!-- Статус -->
+                                <Label Text="{Binding Status, StringFormat='Статус: {0}'}" FontSize="Small" />
+
+                                <!-- Цена -->
+                                <Label Text="{Binding TotalPrice, StringFormat='Цена: {0:C}'}" FontSize="Small" />
+
+                                <!-- Дата создания -->
+                                <Label Text="{Binding CreatedAt, StringFormat='Дата: {0:dd/MM/yyyy HH:mm}'}" FontSize="Small" />
+
+                                <!-- Кнопка отмены (отображается, если статус не "completed") -->
+                                <Button Text="Отменить"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=CancelBookingCommand}"
+                                        CommandParameter="{Binding .}"
+                                        IsVisible="{Binding IsCancelable}"
+                                        Margin="0,10,0,0" />
+                            </StackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Сообщение об ошибке -->
+            <Label Text="{Binding ErrorMessage}" 
+                   TextColor="Red" 
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource StringNotNullOrEmptyConverter}}" />
+        </StackLayout>
+    </ScrollView>
+</ContentPage>
