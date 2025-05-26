@@ -9,18 +9,35 @@
             <Label Text="{Binding Place.Description}" />
             <Label Text="{Binding Place.Address}" />
             <Label Text="{Binding Place.ContactPhone}" />
-            <!--<Label Text="{Binding Place.Status}" />-->
-            <!--<Label Text="{Binding Place.CreatedAt, StringFormat='{0:dd/MM/yyyy HH:mm}'}" />-->
 
-            <!-- Изображения -->
+            <!-- Изображения в виде карусели -->
             <Label Text="Изображения:" FontAttributes="Bold" />
-            <CollectionView ItemsSource="{Binding Images}" EmptyView="Нет изображений">
-                <CollectionView.ItemTemplate>
+            <CarouselView ItemsSource="{Binding Images}"
+                          HeightRequest="200"
+                          EmptyView="Нет изображений">
+                <CarouselView.ItemTemplate>
                     <DataTemplate>
-                        <Label Text="{Binding .}" Margin="10,0,0,0" />
+                        <Image Source="{Binding .}" 
+                               HeightRequest="200" 
+                               WidthRequest="300" 
+                               Aspect="AspectFill"
+                               HorizontalOptions="Center">
+                            <Image.Triggers>
+                                <DataTrigger TargetType="Image" 
+                                             Binding="{Binding .}" 
+                                             Value="{x:Null}">
+                                    <Setter Property="IsVisible" Value="False" />
+                                </DataTrigger>
+                            </Image.Triggers>
+                        </Image>
                     </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+                </CarouselView.ItemTemplate>
+                <CarouselView.IndicatorView>
+                    <IndicatorView IndicatorColor="LightGray"
+                                   SelectedIndicatorColor="Black"
+                                   HorizontalOptions="Center" />
+                </CarouselView.IndicatorView>
+            </CarouselView>
 
             <!-- Комнаты -->
             <Label Text="Комнаты:" FontAttributes="Bold" />

@@ -44,11 +44,10 @@ public partial class PlaceDetailViewModel : ObservableObject
         _place = place ?? throw new ArgumentNullException(nameof(place));
         _connectionString = connectionString;
 
-        // Добавление тестовых данных
-        Categories = new ObservableCollection<string> { "Тестовая категория 1", "Тестовая категория 2" };
-        Images = new ObservableCollection<string> { "http://example.com/image1.jpg", "http://example.com/image2.jpg" };
-        Rooms = new ObservableCollection<string> { "Тестовая комната 1", "Тестовая комната 2" };
-        RoomFeatures = new ObservableCollection<string> { "Тестовая особенность 1", "Тестовая особенность 2" };
+        Categories = new ObservableCollection<string>();
+        Images = new ObservableCollection<string>();
+        Rooms = new ObservableCollection<string>();
+        RoomFeatures = new ObservableCollection<string>();
 
         Debug.WriteLine($"PlaceDetailViewModel initialized for placeId={_place.PlaceId}");
         Task.Run(async () => await LoadPlaceDetailsAsync());
@@ -61,7 +60,6 @@ public partial class PlaceDetailViewModel : ObservableObject
         {
             ErrorMessage = string.Empty;
 
-            // Получаем полные данные через репозиторий
             var fullPlace = await _placeRepository.GetFullPlaceAsync(_place.PlaceId);
             if (fullPlace == null)
             {
@@ -70,7 +68,6 @@ public partial class PlaceDetailViewModel : ObservableObject
                 return;
             }
 
-            // Загружаем категории
             Categories.Clear();
             if (fullPlace.Category != null)
             {
@@ -78,18 +75,24 @@ public partial class PlaceDetailViewModel : ObservableObject
             }
             Debug.WriteLine($"Loaded {Categories.Count} categories.");
 
-            // Загружаем изображения
             Images.Clear();
             if (fullPlace.Images != null)
             {
                 foreach (var image in fullPlace.Images)
                 {
-                    Images.Add(image);
+                    if (!string.IsNullOrEmpty(image))
+                    {
+                        Images.Add(image);
+                        Debug.WriteLine($"Added image URL: {image}");
+                    }
                 }
+            }
+            else
+            {
+                Debug.WriteLine("No images found for this place.");
             }
             Debug.WriteLine($"Loaded {Images.Count} images.");
 
-            // Загружаем комнаты
             Rooms.Clear();
             if (fullPlace.Rooms != null)
             {
@@ -100,7 +103,6 @@ public partial class PlaceDetailViewModel : ObservableObject
             }
             Debug.WriteLine($"Loaded {Rooms.Count} rooms.");
 
-            // Загружаем особенности комнат
             RoomFeatures.Clear();
             if (fullPlace.Rooms != null)
             {
