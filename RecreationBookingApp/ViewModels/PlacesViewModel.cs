@@ -136,13 +136,18 @@ public partial class PlacesViewModel : ObservableObject
                 await LoadCategoriesAsync();
             }
 
-            var placeList = (await _placeRepository.GetAllAsync())?.ToList() ?? new List<Place>();
+            var placeList = await _placeRepository.GetAllAsync();
+            if (placeList == null)
+            {
+                Debug.WriteLine("PlacesViewModel: GetAllAsync returned null, initializing empty list.");
+                placeList = new List<Place>();
+            }
             Places.Clear();
 
             var filteredPlaces = placeList.AsQueryable();
             if (SelectedStatusFilter != "All")
             {
-                filteredPlaces = filteredPlaces.Where(p => p.Status == SelectedStatusFilter);
+                filteredPlaces = filteredPlaces?.Where(p => p.Status == SelectedStatusFilter) ?? new List<Place>().AsQueryable();
             }
             if (SelectedCategoryFilter != "All")
             {
@@ -150,7 +155,7 @@ public partial class PlacesViewModel : ObservableObject
                 if (category != null)
                 {
                     SelectedCategoryId = category.CategoryId;
-                    filteredPlaces = filteredPlaces.Where(p => p.CategoryId == SelectedCategoryId);
+                    filteredPlaces = filteredPlaces?.Where(p => p.CategoryId == SelectedCategoryId) ?? new List<Place>().AsQueryable();
                     Debug.WriteLine($"PlacesViewModel: Filtering places by category: {SelectedCategoryFilter} (ID: {SelectedCategoryId})");
                 }
                 else
@@ -159,13 +164,16 @@ public partial class PlacesViewModel : ObservableObject
                 }
             }
 
-            var placesList = filteredPlaces.ToList();
+            var placesList = filteredPlaces?.ToList() ?? new List<Place>();
 
-            // Запрашиваем средний рейтинг для каждого места
             foreach (var place in placesList)
             {
                 place.AverageRating = await _placeRepository.GetAverageRatingAsync(place.PlaceId);
                 Debug.WriteLine($"PlacesViewModel: Fetched average rating for placeId={place.PlaceId}: {place.AverageRating}");
+
+                place.MainImageUrl = await _placeRepository.GetMainImageUrlAsync(place.PlaceId);
+                Debug.WriteLine($"PlacesViewModel: Fetched main image URL for placeId={place.PlaceId}: {place.MainImageUrl ?? "No main image"}");
+
                 Places.Add(place);
             }
 

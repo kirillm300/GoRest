@@ -7,6 +7,7 @@ namespace RecreationBookingApp.Repositories
         Task<Place> GetFullPlaceAsync(string placeId); // Метод для полной загрузки
         Task<IEnumerable<Category>> GetCategoriesAsync();
         Task<double> GetAverageRatingAsync(string placeId);
+        Task<string> GetMainImageUrlAsync(string placeId);
     }
 }
 

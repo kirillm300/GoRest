@@ -276,4 +276,26 @@ public class PlaceRepository : IPlaceRepository
         }
         return categories;
     }
+
+    public async Task<string> GetMainImageUrlAsync(string placeId)
+    {
+        var connectionString = _dbContext.Database.GetDbConnection().ConnectionString;
+
+        using (var connection = new SqliteConnection(connectionString))
+        {
+            await connection.OpenAsync();
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                SELECT url
+                FROM images
+                WHERE place_id = $placeId AND is_main = 1
+                LIMIT 1";
+            command.Parameters.AddWithValue("$placeId", placeId);
+
+            var result = await command.ExecuteScalarAsync();
+            var url = result != null ? result.ToString() : null;
+            Debug.WriteLine($"GetMainImageUrlAsync for placeId={placeId}: {url ?? "No image found"}");
+            return url;
+        }
+    }
 }

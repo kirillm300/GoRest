@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="RecreationBookingApp.Views.PlacesPage"
              Title="Места">
-    <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="10">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" Padding="10">
         <!-- Фильтр по статусу -->
         <HorizontalStackLayout Grid.Row="0" Spacing="10">
             <Label Text="Фильтр по статусу:" VerticalOptions="Center" />
@@ -20,8 +20,11 @@
                     HorizontalOptions="FillAndExpand" />
         </HorizontalStackLayout>
 
+        <!-- Кнопка для выбора изображения -->
+        <Button Grid.Row="2" Text="Выбрать изображение" Command="{Binding PickImageCommand}" />
+
         <!-- Список мест -->
-        <CollectionView Grid.Row="3" 
+        <CollectionView Grid.Row="4" 
                         ItemsSource="{Binding Places}" 
                         SelectedItem="{Binding SelectedPlace}"
                         SelectionMode="Single"
@@ -32,6 +35,32 @@
                 <DataTemplate>
                     <Frame Padding="10" Margin="5">
                         <StackLayout>
+                            <!-- Изображение -->
+                            <Image x:Name="PlaceImage" 
+                                   Source="{Binding MainImageUrl}" 
+                                   HeightRequest="150" 
+                                   WidthRequest="150" 
+                                   Aspect="AspectFill">
+                                <Image.Triggers>
+                                    <DataTrigger TargetType="Image" 
+                                                 Binding="{Binding MainImageUrl}" 
+                                                 Value="{x:Null}">
+                                        <Setter Property="IsVisible" Value="False" />
+                                    </DataTrigger>
+                                </Image.Triggers>
+                            </Image>
+                            <Label Text="Нет изображения" 
+                                   HorizontalOptions="Center"
+                                   IsVisible="False">
+                                <Label.Triggers>
+                                    <DataTrigger TargetType="Label" 
+                                                 Binding="{Binding MainImageUrl}" 
+                                                 Value="{x:Null}">
+                                        <Setter Property="IsVisible" Value="True" />
+                                    </DataTrigger>
+                                </Label.Triggers>
+                            </Label>
+
                             <Label Text="{Binding Name}" FontAttributes="Bold" />
                             <Label Text="{Binding Description}" />
                             <Label Text="{Binding Address}" />
@@ -45,14 +74,14 @@
         </CollectionView>
 
         <!-- Индикатор загрузки -->
-        <ActivityIndicator Grid.Row="3" 
+        <ActivityIndicator Grid.Row="4" 
                            IsRunning="{Binding IsBusy}" 
                            IsVisible="{Binding IsBusy}" 
                            VerticalOptions="Center" 
                            HorizontalOptions="Center" />
 
         <!-- Сообщение об ошибке -->
-        <Label Grid.Row="3" 
+        <Label Grid.Row="4" 
                Text="{Binding ErrorMessage}" 
                TextColor="Red" 
                IsVisible="{Binding ErrorMessage, Converter={StaticResource StringNotNullOrEmptyConverter}}" />
