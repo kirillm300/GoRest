@@ -37,6 +37,7 @@
                             <Label Text="{Binding Address}" />
                             <Label Text="{Binding Status}" />
                             <Label Text="{Binding Category?.Name}" />
+                            <Label Text="{Binding AverageRating, StringFormat='Средний рейтинг: {0:F1}'}" />
                         </StackLayout>
                     </Frame>
                 </DataTemplate>

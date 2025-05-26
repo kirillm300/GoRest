@@ -50,4 +50,5 @@ public class Place
 
     public List<Room> Rooms { get; set; } = new List<Room>(); // Коллекция комнат
     public List<string> Images { get; set; } = new List<string>(); // Коллекция URL изображений
+    public double AverageRating { get; set; } // Новое свойство для среднего рейтинга
 }

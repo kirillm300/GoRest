@@ -24,6 +24,8 @@ public partial class PlaceDetailPage : ContentPage
     private TimeSpan _endTime;
     private Room _selectedRoom;
     private decimal _totalPrice;
+    private int _peopleCount;
+    private int _maxCapacity;
 
     public string PlaceId
     {
@@ -77,6 +79,7 @@ public partial class PlaceDetailPage : ContentPage
             _selectedRoom = value;
             OnPropertyChanged();
             UpdateTotalPrice(); // Обновляем цену при смене комнаты
+            MaxCapacity = _selectedRoom?.Capacity ?? 0; // Обновляем максимальную вместимость
         }
     }
 
@@ -124,6 +127,27 @@ public partial class PlaceDetailPage : ContentPage
         }
     }
 
+    public int PeopleCount
+    {
+        get => _peopleCount;
+        set
+        {
+            _peopleCount = value;
+            OnPropertyChanged();
+            UpdateTotalPrice(); // Обновляем цену при изменении количества людей (если нужно)
+        }
+    }
+
+    public int MaxCapacity
+    {
+        get => _maxCapacity;
+        set
+        {
+            _maxCapacity = value;
+            OnPropertyChanged();
+        }
+    }
+
     public IRelayCommand BookPlaceCommand { get; }
 
     public PlaceDetailPage(AppDbContext dbContext)
@@ -135,6 +159,7 @@ public partial class PlaceDetailPage : ContentPage
         EndDate = DateTime.Today.AddDays(1);
         StartTime = new TimeSpan(14, 0, 0); // 14:00 по умолчанию
         EndTime = new TimeSpan(0, 0, 0);    // 00:00 по умолчанию
+        PeopleCount = 1; // Значение по умолчанию
         BindingContext = this;
         Debug.WriteLine("PlaceDetailPage: Constructed with AppDbContext.");
     }
@@ -362,6 +387,12 @@ public partial class PlaceDetailPage : ContentPage
             currentDate = currentDate.AddDays(1);
         }
 
+        // Учитываем количество людей (простейшая логика: цена увеличивается пропорционально)
+        if (PeopleCount > 0)
+        {
+            total *= PeopleCount;
+        }
+
         return Math.Round(total, 2);
     }
 
@@ -398,6 +429,18 @@ public partial class PlaceDetailPage : ContentPage
         if (SelectedRoom == null)
         {
             ErrorMessage = "Пожалуйста, выберите комнату.";
+            return;
+        }
+
+        if (PeopleCount <= 0)
+        {
+            ErrorMessage = "Количество человек должно быть больше 0.";
+            return;
+        }
+
+        if (PeopleCount > MaxCapacity)
+        {
+            ErrorMessage = $"Количество человек ({PeopleCount}) превышает максимальную вместимость ({MaxCapacity}).";
             return;
         }
 
@@ -521,7 +564,7 @@ public partial class PlaceDetailPage : ContentPage
                                 PromocodeId = null,
                                 Status = "pending",
                                 TotalPrice = CalculateTotalPrice(),
-                                PeopleCount = 1,
+                                PeopleCount = PeopleCount, // Записываем количество человек
                                 PaymentStatus = "unpaid",
                                 CreatedAt = createdAt
                             };

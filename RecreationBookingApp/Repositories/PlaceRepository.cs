@@ -57,10 +57,30 @@ public class PlaceRepository : IPlaceRepository
         return places;
     }
 
+
     public async Task<Place> GetAsync(Expression<Func<Place, bool>> predicate)
     {
         var allPlaces = await GetAllAsync();
         return allPlaces.AsQueryable().FirstOrDefault(predicate);
+    }
+
+    public async Task<double> GetAverageRatingAsync(string placeId)
+    {
+        var connectionString = _dbContext.Database.GetDbConnection().ConnectionString;
+
+        using (var connection = new SqliteConnection(connectionString))
+        {
+            await connection.OpenAsync();
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                SELECT AVG(CAST(rating AS REAL))
+                FROM reviews
+                WHERE place_id = $placeId";
+            command.Parameters.AddWithValue("$placeId", placeId);
+
+            var result = await command.ExecuteScalarAsync();
+            return result != DBNull.Value ? Convert.ToDouble(result) : 0.0;
+        }
     }
 
     public async Task<Place> GetFullPlaceAsync(string placeId)

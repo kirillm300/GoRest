@@ -15,7 +15,7 @@ namespace RecreationBookingApp.ViewModels;
 public partial class PlacesViewModel : ObservableObject
 {
     private readonly IPlaceRepository _placeRepository;
-    private List<Category> _cachedCategories; // Для кэширования категорий
+    private List<Category> _cachedCategories;
 
     [ObservableProperty]
     private ObservableCollection<Place> places;
@@ -39,7 +39,7 @@ public partial class PlacesViewModel : ObservableObject
     private ObservableCollection<string> categoryFilters;
 
     [ObservableProperty]
-    private string selectedCategoryId; // Новое поле для хранения CategoryId
+    private string selectedCategoryId;
 
     [ObservableProperty]
     private Place selectedPlace;
@@ -49,11 +49,11 @@ public partial class PlacesViewModel : ObservableObject
         _placeRepository = placeRepository;
         Places = new ObservableCollection<Place>();
         StatusFilters = new ObservableCollection<string> { "All", "active", "pending", "archived" };
-        CategoryFilters = new ObservableCollection<string> { "All" }; // По умолчанию "All"
-        SelectedStatusFilter = "All"; // По умолчанию показываем все
-        SelectedCategoryFilter = "All"; // По умолчанию показываем все
-        _cachedCategories = new List<Category>(); // Инициализируем пустым списком
-        InitializeAsync().GetAwaiter().GetResult(); // Синхронная инициализация
+        CategoryFilters = new ObservableCollection<string> { "All" };
+        SelectedStatusFilter = "All";
+        SelectedCategoryFilter = "All";
+        _cachedCategories = new List<Category>();
+        InitializeAsync().GetAwaiter().GetResult();
     }
 
     private async Task InitializeAsync()
@@ -94,7 +94,7 @@ public partial class PlacesViewModel : ObservableObject
             Debug.WriteLine($"PlacesViewModel: Fetched {_cachedCategories.Count} categories from repository.");
 
             CategoryFilters.Clear();
-            CategoryFilters.Add("All"); // Добавляем "All" как первый элемент
+            CategoryFilters.Add("All");
             foreach (var category in _cachedCategories)
             {
                 if (!string.IsNullOrWhiteSpace(category.Name))
@@ -130,7 +130,6 @@ public partial class PlacesViewModel : ObservableObject
             IsBusy = true;
             ErrorMessage = string.Empty;
 
-            // Убедимся, что категории загружены
             if (!_cachedCategories.Any())
             {
                 Debug.WriteLine("PlacesViewModel: Categories not loaded yet, loading now...");
@@ -140,7 +139,6 @@ public partial class PlacesViewModel : ObservableObject
             var placeList = (await _placeRepository.GetAllAsync())?.ToList() ?? new List<Place>();
             Places.Clear();
 
-            // Применяем фильтры
             var filteredPlaces = placeList.AsQueryable();
             if (SelectedStatusFilter != "All")
             {
@@ -161,10 +159,16 @@ public partial class PlacesViewModel : ObservableObject
                 }
             }
 
-            foreach (var place in filteredPlaces)
+            var placesList = filteredPlaces.ToList();
+
+            // Запрашиваем средний рейтинг для каждого места
+            foreach (var place in placesList)
             {
+                place.AverageRating = await _placeRepository.GetAverageRatingAsync(place.PlaceId);
+                Debug.WriteLine($"PlacesViewModel: Fetched average rating for placeId={place.PlaceId}: {place.AverageRating}");
                 Places.Add(place);
             }
+
             Debug.WriteLine($"PlacesViewModel: Loaded {Places.Count} places after applying filters.");
         }
         catch (Exception ex)
@@ -181,7 +185,7 @@ public partial class PlacesViewModel : ObservableObject
     [RelayCommand]
     private void RefreshPlaces()
     {
-        LoadPlacesAsync(); // Обновляем список
+        LoadPlacesAsync();
     }
 
     [RelayCommand]
@@ -195,9 +199,9 @@ public partial class PlacesViewModel : ObservableObject
 
         Debug.WriteLine($"PlaceSelected: Navigating to PlaceDetailPage with placeId={SelectedPlace.PlaceId}");
         var navigationParameters = new Dictionary<string, object>
-    {
-        { "placeId", SelectedPlace.PlaceId }
-    };
+        {
+            { "placeId", SelectedPlace.PlaceId }
+        };
         await Shell.Current.GoToAsync($"{nameof(PlaceDetailPage)}", navigationParameters);
         SelectedPlace = null;
     }

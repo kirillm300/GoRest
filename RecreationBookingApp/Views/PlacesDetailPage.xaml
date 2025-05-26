@@ -71,6 +71,12 @@
                 <TimePicker Time="{Binding EndTime, Mode=TwoWay}" />
             </StackLayout>
 
+            <!-- Количество человек -->
+            <Label Text="Количество человек:" FontAttributes="Bold" />
+            <StackLayout Orientation="Horizontal" Spacing="10">
+                <Entry Placeholder="Введите количество" Text="{Binding PeopleCount, Mode=TwoWay}" Keyboard="Numeric" />
+            </StackLayout>
+
             <!-- Вывод цены -->
             <Label Text="Стоимость:" FontAttributes="Bold" FontSize="16"/>
             <Label Text="{Binding TotalPrice, StringFormat='{0:F2}'}" FontSize="14" />
