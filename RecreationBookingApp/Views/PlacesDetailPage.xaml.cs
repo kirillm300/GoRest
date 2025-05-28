@@ -78,6 +78,7 @@ public partial class PlaceDetailPage : ContentPage
         {
             _selectedRoom = value;
             OnPropertyChanged();
+            UpdateRoomFeatures(); // Обновляем особенности при выборе комнаты
             UpdateTotalPrice(); // Обновляем цену при смене комнаты
             MaxCapacity = _selectedRoom?.Capacity ?? 0; // Обновляем максимальную вместимость
         }
@@ -149,11 +150,13 @@ public partial class PlaceDetailPage : ContentPage
     }
 
     public IRelayCommand BookPlaceCommand { get; }
+    public IRelayCommand ShowRoomDetailsCommand { get; }
 
     public PlaceDetailPage(AppDbContext dbContext)
     {
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext), "AppDbContext cannot be null.");
         BookPlaceCommand = new RelayCommand(async () => await BookPlaceAsync());
+        ShowRoomDetailsCommand = new RelayCommand(ShowRoomDetails);
         InitializeComponent();
         StartDate = DateTime.Today;
         EndDate = DateTime.Today.AddDays(1);
@@ -263,7 +266,7 @@ public partial class PlaceDetailPage : ContentPage
                 // Загрузка особенностей комнат
                 var featureCommand = connection.CreateCommand();
                 featureCommand.CommandText = @"
-                    SELECT rf.feature_name
+                    SELECT rf.feature_name, rf.room_id
                     FROM room_features rf
                     WHERE rf.room_id IN (
                         SELECT r.room_id 
@@ -275,15 +278,35 @@ public partial class PlaceDetailPage : ContentPage
                 using (var reader = await featureCommand.ExecuteReaderAsync())
                 {
                     RoomFeatures.Clear();
+                    var roomFeatureDict = new System.Collections.Generic.Dictionary<string, List<string>>();
                     while (await reader.ReadAsync())
                     {
                         var featureName = reader.GetString(0);
+                        var roomId = reader.GetString(1);
                         if (!string.IsNullOrEmpty(featureName))
                         {
-                            RoomFeatures.Add(featureName);
+                            if (!roomFeatureDict.ContainsKey(roomId))
+                            {
+                                roomFeatureDict[roomId] = new List<string>();
+                            }
+                            roomFeatureDict[roomId].Add(featureName);
                         }
                     }
-                    Debug.WriteLine($"PlaceDetailPage: Loaded {RoomFeatures.Count} room features for placeId={PlaceId}");
+                    Debug.WriteLine($"PlaceDetailPage: Loaded room features for placeId={PlaceId}");
+
+                    // Привязываем особенности к комнатам
+                    foreach (var room in Rooms)
+                    {
+                        if (roomFeatureDict.ContainsKey(room.RoomId))
+                        {
+                            if (room.Features == null)
+                                room.Features = new List<RoomFeature>();
+                            foreach (var featureName in roomFeatureDict[room.RoomId])
+                            {
+                                room.Features.Add(new RoomFeature { FeatureName = featureName });
+                            }
+                        }
+                    }
                 }
 
                 // Загрузка правил ценообразования
@@ -328,6 +351,25 @@ public partial class PlaceDetailPage : ContentPage
             ErrorMessage = $"Ошибка загрузки данных: {ex.Message}";
             Debug.WriteLine($"PlaceDetailPage: Error loading place details: {ex.Message}");
         }
+    }
+
+    private void UpdateRoomFeatures()
+    {
+        if (SelectedRoom == null || SelectedRoom.Features == null)
+        {
+            RoomFeatures.Clear();
+            return;
+        }
+
+        RoomFeatures.Clear();
+        foreach (var feature in SelectedRoom.Features)
+        {
+            if (!string.IsNullOrEmpty(feature.FeatureName))
+            {
+                RoomFeatures.Add(feature.FeatureName);
+            }
+        }
+        Debug.WriteLine($"PlaceDetailPage: Updated RoomFeatures with {RoomFeatures.Count} features for room: {SelectedRoom.Name}");
     }
 
     private bool IsWeekend(DateTime date)
@@ -667,5 +709,22 @@ public partial class PlaceDetailPage : ContentPage
             Debug.WriteLine($"PlaceDetailPage: Error checking availability: {ex.Message}");
             return (null, false);
         }
+    }
+
+    private async void ShowRoomDetails()
+    {
+        if (SelectedRoom == null || SelectedRoom.Features == null)
+        {
+            await DisplayAlert("Ошибка", "Выберите комнату для просмотра подробностей.", "OK");
+            return;
+        }
+
+        // Преобразуем особенности в строку для отображения
+        var featuresText = string.Join("\n- ", SelectedRoom.Features
+            .Where(f => !string.IsNullOrEmpty(f.FeatureName))
+            .Select(f => f.FeatureName)
+            .Prepend("Особенности:")); // Добавляем заголовок
+
+        await DisplayAlert($"Подробности комнаты: {SelectedRoom.Name}", featuresText, "Закрыть");
     }
 }

@@ -5,12 +5,12 @@
              Title="Места">
     <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" Padding="10">
         <!-- Фильтр по статусу -->
-        <HorizontalStackLayout Grid.Row="0" Spacing="10">
+        <!--<HorizontalStackLayout Grid.Row="0" Spacing="10">
             <Label Text="Фильтр по статусу:" VerticalOptions="Center" />
             <Picker ItemsSource="{Binding StatusFilters}"
                     SelectedItem="{Binding SelectedStatusFilter}"
                     HorizontalOptions="FillAndExpand" />
-        </HorizontalStackLayout>
+        </HorizontalStackLayout>-->
 
         <!-- Фильтр по категории -->
         <HorizontalStackLayout Grid.Row="1" Spacing="10">
@@ -19,9 +19,6 @@
                     SelectedItem="{Binding SelectedCategoryFilter}"
                     HorizontalOptions="FillAndExpand" />
         </HorizontalStackLayout>
-
-        <!-- Кнопка для выбора изображения -->
-        <Button Grid.Row="2" Text="Выбрать изображение" Command="{Binding PickImageCommand}" />
 
         <!-- Список мест -->
         <CollectionView Grid.Row="4" 
@@ -64,7 +61,6 @@
                             <Label Text="{Binding Name}" FontAttributes="Bold" />
                             <Label Text="{Binding Description}" />
                             <Label Text="{Binding Address}" />
-                            <Label Text="{Binding Status}" />
                             <Label Text="{Binding Category?.Name}" />
                             <Label Text="{Binding AverageRating, StringFormat='Средний рейтинг: {0:F1}'}" />
                         </StackLayout>

@@ -55,19 +55,19 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <!-- Особенности комнат -->
-            <Label Text="Особенности комнат:" FontAttributes="Bold" />
-            <CollectionView ItemsSource="{Binding RoomFeatures}" EmptyView="Нет особенностей">
+            <!-- Выбор комнаты -->
+            <Label Text="Выберите комнату для бронирования:" FontAttributes="Bold" />
+            <Picker x:Name="RoomPicker" ItemsSource="{Binding Rooms}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding SelectedRoom, Mode=TwoWay}" />
+            <Button x:Name="RoomDetailsButton" Text="Подробности о комнате" Command="{Binding ShowRoomDetailsCommand}" IsEnabled="{Binding SelectedRoom, Converter={StaticResource NullToBooleanConverter}}" Margin="0,10,0,0" />
+
+            <!-- Особенности комнат (скрыт, используется для всплывающего окна) -->
+            <CollectionView x:Name="RoomFeaturesView" ItemsSource="{Binding RoomFeatures}" IsVisible="False">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <Label Text="{Binding .}" Margin="10,0,0,0" />
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-
-            <!-- Выбор комнаты -->
-            <Label Text="Выберите комнату для бронирования:" FontAttributes="Bold" />
-            <Picker x:Name="RoomPicker" ItemsSource="{Binding Rooms}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding SelectedRoom, Mode=TwoWay}" />
 
             <!-- Выбор диапазона дат и времени -->
             <Label Text="Выберите даты и время:" FontAttributes="Bold" />
