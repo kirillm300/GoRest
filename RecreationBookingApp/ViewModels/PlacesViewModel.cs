@@ -48,10 +48,10 @@ public partial class PlacesViewModel : ObservableObject
     {
         _placeRepository = placeRepository;
         Places = new ObservableCollection<Place>();
-        StatusFilters = new ObservableCollection<string> { "All", "active", "pending", "archived" };
-        CategoryFilters = new ObservableCollection<string> { "All" };
-        SelectedStatusFilter = "All";
-        SelectedCategoryFilter = "All";
+        StatusFilters = new ObservableCollection<string> { "Все", "active", "pending", "archived" };
+        CategoryFilters = new ObservableCollection<string> { "Все" };
+        SelectedStatusFilter = "Все";
+        SelectedCategoryFilter = "Все";
         _cachedCategories = new List<Category>();
         InitializeAsync().GetAwaiter().GetResult();
     }
@@ -94,7 +94,7 @@ public partial class PlacesViewModel : ObservableObject
             Debug.WriteLine($"PlacesViewModel: Fetched {_cachedCategories.Count} categories from repository.");
 
             CategoryFilters.Clear();
-            CategoryFilters.Add("All");
+            CategoryFilters.Add("Все");
             foreach (var category in _cachedCategories)
             {
                 if (!string.IsNullOrWhiteSpace(category.Name))
@@ -145,11 +145,11 @@ public partial class PlacesViewModel : ObservableObject
             Places.Clear();
 
             var filteredPlaces = placeList.AsQueryable();
-            if (SelectedStatusFilter != "All")
+            if (SelectedStatusFilter != "Все")
             {
                 filteredPlaces = filteredPlaces?.Where(p => p.Status == SelectedStatusFilter) ?? new List<Place>().AsQueryable();
             }
-            if (SelectedCategoryFilter != "All")
+            if (SelectedCategoryFilter != "Все")
             {
                 var category = _cachedCategories.FirstOrDefault(c => c.Name == SelectedCategoryFilter);
                 if (category != null)

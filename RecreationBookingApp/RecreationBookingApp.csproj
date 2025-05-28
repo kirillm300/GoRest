@@ -68,6 +68,7 @@
 	  <None Remove="Views\" />
 	  <None Remove="Converters\" />
 	  <None Remove="Resources\Raw\gorest_db.db" />
+	  <None Remove="Resources\Strings\Strings.ru" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Folder Include="Models\" />
