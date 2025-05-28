@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converters="clr-namespace:RecreationBookingApp.Converters"
+             xmlns:viewmodels="clr-namespace:RecreationBookingApp.ViewModels"
+             x:Class="RecreationBookingApp.Views.OwnerBookingsPage"
+             Title="Мои бронирования">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:StringNotNullOrEmptyConverter x:Key="StringNotNullOrEmptyConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+    <StackLayout Padding="10">
+        <Label Text="Бронирования для ваших мест" FontSize="Large" FontAttributes="Bold" Margin="0,10,0,0" />
+        <Label Text="{Binding ErrorMessage}" TextColor="Red" IsVisible="{Binding ErrorMessage, Converter={StaticResource StringNotNullOrEmptyConverter}}" />
+        <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="Blue" />
+        <CollectionView ItemsSource="{Binding Bookings}" EmptyView="Нет бронирований">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <StackLayout Padding="5" Margin="0,5,0,5" BackgroundColor="LightGray">
+                        <Label Text="{Binding PlaceName, StringFormat='Место: {0}'}" FontAttributes="Bold" />
+                        <Label Text="{Binding UserName, StringFormat='Клиент: {0}'}" />
+                        <Label Text="{Binding CreatedAt, StringFormat='Дата бронирования: {0:dd/MM/yyyy HH:mm}'}" />
+                        <Label Text="{Binding TotalPrice, StringFormat='Стоимость: {0:F2}'}" />
+                        <Label Text="{Binding PeopleCount, StringFormat='Количество человек: {0}'}" />
+                        <Label Text="{Binding PaymentStatus, StringFormat='Статус оплаты: {0}'}" />
+                        <Label Text="Текущий статус бронирования:" FontAttributes="Bold" />
+                        <Label Text="{Binding Status}" /> <!-- Отображение текущего статуса -->
+                        <Label Text="Выберите новый статус:" FontAttributes="Bold" />
+                        <Picker ItemsSource="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:OwnerBookingsViewModel}}, Path=StatusOptions}"
+                                SelectedItem="{Binding Status, Mode=TwoWay}"
+                                ItemDisplayBinding="{Binding .}"
+                                Title="Выберите статус" />
+                        <Button Text="Сохранить статус" Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:OwnerBookingsViewModel}}, Path=UpdateBookingStatusCommand}" CommandParameter="{Binding .}" />
+                    </StackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+        <Button Text="Обновить" Command="{Binding LoadBookingsCommand}" Margin="0,10,0,0" />
+    </StackLayout>
+</ContentPage>

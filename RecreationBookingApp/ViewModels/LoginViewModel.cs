@@ -3,12 +3,16 @@ using CommunityToolkit.Mvvm.Input;
 using RecreationBookingApp.Services;
 using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
+using Microsoft.Data.Sqlite;
+using RecreationBookingApp.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace RecreationBookingApp.ViewModels;
 
 public partial class LoginViewModel : ObservableObject
 {
     private readonly IUserService _userService;
+    private readonly AppDbContext _dbContext;
 
     [ObservableProperty]
     private string email;
@@ -33,27 +37,39 @@ public partial class LoginViewModel : ObservableObject
 
     public string ToggleModeText => IsRegisterMode ? "Перейти ко входу" : "Перейти к регистрации";
 
-    public LoginViewModel(IUserService userService)
+    public LoginViewModel(IUserService userService, AppDbContext dbContext)
     {
         _userService = userService;
+        _dbContext = dbContext;
         IsRegisterMode = false;
     }
 
     partial void OnEmailChanged(string value)
     {
-        LoginCommand.NotifyCanExecuteChanged();
-        RegisterCommand.NotifyCanExecuteChanged();
+        this.LoginCommand?.NotifyCanExecuteChanged();
+        this.RegisterCommand?.NotifyCanExecuteChanged();
     }
 
     partial void OnPasswordChanged(string value)
     {
-        LoginCommand.NotifyCanExecuteChanged();
-        RegisterCommand.NotifyCanExecuteChanged();
+        this.LoginCommand?.NotifyCanExecuteChanged();
+        this.RegisterCommand?.NotifyCanExecuteChanged();
     }
 
-    partial void OnFullNameChanged(string value) => RegisterCommand.NotifyCanExecuteChanged();
-    partial void OnPhoneChanged(string value) => RegisterCommand.NotifyCanExecuteChanged();
-    partial void OnIsBusyChanged(bool value) => RegisterCommand.NotifyCanExecuteChanged();
+    partial void OnFullNameChanged(string value)
+    {
+        this.RegisterCommand?.NotifyCanExecuteChanged();
+    }
+
+    partial void OnPhoneChanged(string value)
+    {
+        this.RegisterCommand?.NotifyCanExecuteChanged();
+    }
+
+    partial void OnIsBusyChanged(bool value)
+    {
+        this.RegisterCommand?.NotifyCanExecuteChanged();
+    }
 
     [RelayCommand(CanExecute = nameof(CanExecuteLogin))]
     private async Task LoginAsync()
@@ -72,8 +88,19 @@ public partial class LoginViewModel : ObservableObject
                 return;
             }
 
+            // Сохраняем UserId
             Preferences.Set("UserId", user.UserId);
-            await Shell.Current.GoToAsync("//main");
+
+            // Проверяем роль пользователя
+            string role = await GetUserRoleAsync(user.UserId);
+            if (role == "owner")
+            {
+                await Shell.Current.GoToAsync("//ownerBookings");
+            }
+            else
+            {
+                await Shell.Current.GoToAsync("//places");
+            }
         }
         catch (Exception ex)
         {
@@ -82,6 +109,19 @@ public partial class LoginViewModel : ObservableObject
         finally
         {
             IsBusy = false;
+        }
+    }
+
+    private async Task<string> GetUserRoleAsync(string userId)
+    {
+        using (var connection = _dbContext.Database.GetDbConnection() as SqliteConnection)
+        {
+            await connection.OpenAsync();
+            var command = connection.CreateCommand();
+            command.CommandText = "SELECT role FROM users WHERE user_id = $userId";
+            command.Parameters.AddWithValue("$userId", userId);
+            var role = await command.ExecuteScalarAsync() as string;
+            return role ?? "client";
         }
     }
 
@@ -118,7 +158,7 @@ public partial class LoginViewModel : ObservableObject
                 return;
             }
 
-            await Shell.Current.GoToAsync("//main");
+            await Shell.Current.GoToAsync("//places");
         }
         catch (Exception ex)
         {

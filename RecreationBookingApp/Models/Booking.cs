@@ -47,4 +47,8 @@ public class Booking
 
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }
+
+    // Добавляем для отображения
+    public string UserName { get; set; }
+    public string PlaceName { get; set; }
 }

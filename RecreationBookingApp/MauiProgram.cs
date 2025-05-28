@@ -53,6 +53,12 @@ public static class MauiProgram
         builder.Services.AddTransient<PlaceDetailViewModel>();
         builder.Services.AddTransient<PlaceDetailPage>();
         builder.Services.AddTransient<ReviewPage>();
+        builder.Services.AddTransient<OwnerBookingsViewModel>();
+        builder.Services.AddTransient<OwnerBookingsPage>(s =>
+        {
+            var dbContext = s.GetRequiredService<AppDbContext>();
+            return new OwnerBookingsPage(dbContext);
+        });
 
         builder.Services.AddSingleton<App>();
 
