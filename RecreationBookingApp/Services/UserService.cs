@@ -1,5 +1,8 @@
 ﻿using RecreationBookingApp.Models;
 using RecreationBookingApp.Repositories;
+using System;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace RecreationBookingApp.Services;
@@ -19,7 +22,12 @@ public class UserService : IUserService
             return null;
 
         var user = await _userRepository.GetAsync(u => u.Email == email);
-        if (user == null || user.PasswordHash != password)
+        if (user == null || string.IsNullOrEmpty(user.PasswordHash))
+            return null;
+
+        // Хешируем введённый пароль
+        string hashedInputPassword = HashPassword(password);
+        if (hashedInputPassword != user.PasswordHash)
             return null;
 
         return user;
@@ -30,8 +38,19 @@ public class UserService : IUserService
         if (await _userRepository.GetAsync(u => u.Email == user.Email) != null)
             return false;
 
-        user.PasswordHash = password; // Прямое сохранение пароля (замени на хеширование в будущем)
+        // Хешируем пароль перед сохранением
+        user.PasswordHash = HashPassword(password);
         await _userRepository.AddAsync(user);
         return true;
+    }
+
+    private string HashPassword(string password)
+    {
+        using (var sha256 = SHA256.Create())
+        {
+            byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+            byte[] hashBytes = sha256.ComputeHash(passwordBytes);
+            return Convert.ToBase64String(hashBytes);
+        }
     }
 }
