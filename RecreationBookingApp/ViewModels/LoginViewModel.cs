@@ -107,6 +107,11 @@ public partial class LoginViewModel : ObservableObject
         }
     }
 
+    partial void OnIsRegisterModeChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ToggleModeText)); // Уведомляем UI об изменении ToggleModeText
+    }
+
     private async Task<string> GetUserRoleAsync(string userId)
     {
         using (var connection = _dbContext.Database.GetDbConnection() as SqliteConnection)

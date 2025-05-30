@@ -7,33 +7,35 @@
     Shell.FlyoutBehavior="Flyout" >
 
     <ShellContent
-        Title="Login"
+        Title="Выйти"
         ContentTemplate="{DataTemplate views:LoginPage}"
         Route="login"
-        Shell.FlyoutBehavior="Disabled" />
+        Shell.FlyoutBehavior="Disabled"/>
 
-    <ShellContent
+    <!--<ShellContent
         Title="Main"
         ContentTemplate="{DataTemplate views:MainPage}"
-        Route="main" />
+        Route="main" />-->
 
     <ShellContent
-        Title="Places"
+        Title="Список мест"
         ContentTemplate="{DataTemplate views:PlacesPage}"
         Route="places" />
 
     <ShellContent
-        Title="Review"
+        Title="Отзывы"
         ContentTemplate="{DataTemplate views:ReviewPage}"
         Route="review" />
 
     <ShellContent
-        Title="Bookings"
+        Title="Мои бронирования"
         ContentTemplate="{DataTemplate views:BookingsPage}"
         Route="bookings" />
 
     <ShellContent
         Title="OwnerBookings"
         ContentTemplate="{DataTemplate views:OwnerBookingsPage}"
-        Route="ownerBookings" />
+        Route="ownerBookings"
+        Shell.FlyoutBehavior="Disabled"
+        />
 </Shell>
