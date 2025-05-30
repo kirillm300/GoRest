@@ -1,4 +1,6 @@
-﻿using RecreationBookingApp.Models;
+﻿using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using RecreationBookingApp.Models;
 using RecreationBookingApp.Repositories;
 using System;
 using System.Security.Cryptography;
@@ -52,5 +54,18 @@ public class UserService : IUserService
             byte[] hashBytes = sha256.ComputeHash(passwordBytes);
             return Convert.ToBase64String(hashBytes);
         }
+    }
+
+    public async Task UpdatePasswordAsync(string email, string newPassword)
+    {
+        var user = await _userRepository.GetAsync(u => u.Email == email);
+        if (user == null)
+        {
+            throw new Exception("Пользователь с таким email не найден.");
+        }
+
+        // Хешируем новый пароль
+        user.PasswordHash = HashPassword(newPassword);
+        await _userRepository.UpdateAsync(user);
     }
 }

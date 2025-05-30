@@ -45,6 +45,8 @@ public static class MauiProgram
         builder.Services.AddScoped<IPlaceRepository, PlaceRepository>();
 
         // Регистрация ViewModels и Views
+        builder.Services.AddTransient<ResetPasswordViewModel>();
+        builder.Services.AddTransient<ResetPasswordPage>();
         builder.Services.AddTransient<LoginViewModel>();
         builder.Services.AddTransient<LoginPage>();
         builder.Services.AddTransient<MainViewModel>();

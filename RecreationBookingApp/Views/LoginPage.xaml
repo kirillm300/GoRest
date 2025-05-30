@@ -6,7 +6,7 @@
     Title="Авторизация">
 
     <VerticalStackLayout Padding="20" Spacing="10">
-        <Label Text="Добро пожаловать!" FontSize="24" HorizontalOptions="Center" />
+        <Label Text="GoRest" FontSize="24" HorizontalOptions="Center" FontAttributes="Bold"/>
 
         <Entry
             Placeholder="Email"
@@ -16,7 +16,8 @@
         <Entry
             Placeholder="Пароль"
             IsPassword="True"
-            Text="{Binding Password}" />
+            Text="{Binding Password}"
+            IsVisible="{Binding !IsRegisterMode}" />
 
         <Entry
             Placeholder="Полное имя"
@@ -28,6 +29,17 @@
             Keyboard="Telephone"
             Text="{Binding Phone}"
             IsVisible="{Binding IsRegisterMode}" />
+
+        <Label
+            Text="Забыли пароль?"
+            TextColor="Blue"
+            FontAttributes="None"
+            HorizontalOptions="Center"
+            IsVisible="{Binding !IsRegisterMode}">
+            <Label.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding StartPasswordResetCommand}" />
+            </Label.GestureRecognizers>
+        </Label>
 
         <Label Text="{Binding ErrorMessage}" TextColor="Red" IsVisible="{Binding ErrorMessage, Converter={StaticResource NotEmptyStringConverter}}" />
 

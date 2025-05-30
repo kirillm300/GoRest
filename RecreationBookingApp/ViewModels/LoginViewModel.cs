@@ -6,6 +6,7 @@ using Microsoft.Maui.Controls;
 using Microsoft.Data.Sqlite;
 using RecreationBookingApp.Data;
 using Microsoft.EntityFrameworkCore;
+using RecreationBookingApp.Views;
 
 namespace RecreationBookingApp.ViewModels;
 
@@ -46,29 +47,24 @@ public partial class LoginViewModel : ObservableObject
 
     partial void OnEmailChanged(string value)
     {
-        this.LoginCommand?.NotifyCanExecuteChanged();
-        this.RegisterCommand?.NotifyCanExecuteChanged();
+        LoginCommand.NotifyCanExecuteChanged();
+        RegisterCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnPasswordChanged(string value)
     {
-        this.LoginCommand?.NotifyCanExecuteChanged();
-        this.RegisterCommand?.NotifyCanExecuteChanged();
+        LoginCommand.NotifyCanExecuteChanged();
+        RegisterCommand.NotifyCanExecuteChanged();
     }
 
-    partial void OnFullNameChanged(string value)
-    {
-        this.RegisterCommand?.NotifyCanExecuteChanged();
-    }
+    partial void OnFullNameChanged(string value) => RegisterCommand.NotifyCanExecuteChanged();
+    partial void OnPhoneChanged(string value) => RegisterCommand.NotifyCanExecuteChanged();
+    partial void OnIsBusyChanged(bool value) => RegisterCommand.NotifyCanExecuteChanged();
 
-    partial void OnPhoneChanged(string value)
+    [RelayCommand]
+    private async Task StartPasswordResetAsync()
     {
-        this.RegisterCommand?.NotifyCanExecuteChanged();
-    }
-
-    partial void OnIsBusyChanged(bool value)
-    {
-        this.RegisterCommand?.NotifyCanExecuteChanged();
+        await Application.Current.MainPage.Navigation.PushModalAsync(new ResetPasswordPage());
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteLogin))]
@@ -88,10 +84,8 @@ public partial class LoginViewModel : ObservableObject
                 return;
             }
 
-            // Сохраняем UserId
             Preferences.Set("UserId", user.UserId);
 
-            // Проверяем роль пользователя
             string role = await GetUserRoleAsync(user.UserId);
             if (role == "owner")
             {
