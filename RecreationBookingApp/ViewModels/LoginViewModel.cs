@@ -64,7 +64,8 @@ public partial class LoginViewModel : ObservableObject
     [RelayCommand]
     private async Task StartPasswordResetAsync()
     {
-        await Application.Current.MainPage.Navigation.PushModalAsync(new ResetPasswordPage());
+        var viewModel = Application.Current.MainPage.Handler.MauiContext.Services.GetService<ResetPasswordViewModel>();
+        await Application.Current.MainPage.Navigation.PushModalAsync(new ResetPasswordPage(viewModel));
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteLogin))]

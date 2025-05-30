@@ -68,4 +68,12 @@ public class UserService : IUserService
         user.PasswordHash = HashPassword(newPassword);
         await _userRepository.UpdateAsync(user);
     }
+
+    public async Task<User> GetUserByEmailAsync(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return null;
+
+        return await _userRepository.GetAsync(u => u.Email == email);
+    }
 }

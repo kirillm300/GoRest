@@ -4,9 +4,9 @@ namespace RecreationBookingApp.Views;
 
 public partial class ResetPasswordPage : ContentPage
 {
-	public ResetPasswordPage()
-	{
-		InitializeComponent();
-        BindingContext = new ResetPasswordViewModel();
+    public ResetPasswordPage(ResetPasswordViewModel viewModel)
+    {
+        InitializeComponent();
+        BindingContext = viewModel;
     }
 }
